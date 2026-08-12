@@ -30,7 +30,7 @@ export default function PrintReport() {
 
   if (loading || !wedding) {
     return (
-      <div className="min-h-screen bg-purple-50/40 dark:bg-violet-950">
+     <div className="min-h-screen bg-purple-50/40 dark:bg-violet-950 print:min-h-0 print:bg-white">
         <Navbar />
         <p className="p-8 text-gray-500 dark:text-purple-300">Đang tải...</p>
       </div>
@@ -38,7 +38,7 @@ export default function PrintReport() {
   }
 
   return (
-    <div className="min-h-screen bg-purple-50/40 dark:bg-violet-950">
+ <div className="min-h-screen bg-purple-50/40 dark:bg-violet-950 print:min-h-0 print:bg-white">
       <Navbar />
       <div className="no-print mx-auto flex max-w-4xl items-center justify-between px-4 py-4">
         <Link to={`/wedding/${id}`} className="flex items-center gap-1.5 text-sm text-purple-600 hover:underline dark:text-purple-300">
