@@ -1,0 +1,59 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Nền gradient tím nhiều màu, đổi dần theo thời gian */
+.gradient-bg {
+  background: linear-gradient(120deg, #4c1d95, #7e22ce, #a21caf, #6d28d9, #4338ca);
+  background-size: 400% 400%;
+  animation: gradientShift 12s ease infinite;
+}
+
+.gradient-bg-soft {
+  background: linear-gradient(120deg, #f5f3ff, #ede9fe, #fae8ff, #ede9fe);
+  background-size: 400% 400%;
+  animation: gradientShift 16s ease infinite;
+}
+
+.dark .gradient-bg-soft {
+  background: linear-gradient(120deg, #1a0b2e, #2e1065, #3b0764, #1e1b4b);
+  background-size: 400% 400%;
+  animation: gradientShift 16s ease infinite;
+}
+
+.gradient-text {
+  background: linear-gradient(90deg, #a78bfa, #e879f9, #818cf8);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: gradientShift 6s ease infinite;
+}
+
+/* Thanh cuộn tối giản */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: rgba(168, 85, 247, 0.4); border-radius: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* Khu vực chỉ hiển thị khi in báo cáo A4 */
+@media print {
+  body * { visibility: hidden; }
+  #print-area, #print-area * { visibility: visible; }
+  #print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+  .no-print { display: none !important; }
+  @page { size: A4; margin: 14mm 12mm; }
+}
