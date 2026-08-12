@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { collection, doc, getDoc, getDocs } from 'firebase/firestore'
 import { ArrowLeft, Printer } from 'lucide-react'
 import { db } from '../firebase'
+import { summarizeGifts } from '../utils'
 import Navbar from '../components/Navbar'
 
 export default function PrintReport() {
@@ -27,10 +28,11 @@ export default function PrintReport() {
 
   const groomGuests = guests.filter((g) => g.side === 'groom')
   const brideGuests = guests.filter((g) => g.side === 'bride')
+  const combinedSummary = useMemo(() => summarizeGifts(guests), [guests])
 
   if (loading || !wedding) {
     return (
-     <div className="min-h-screen bg-purple-50/40 dark:bg-violet-950 print:min-h-0 print:bg-white">
+      <div className="min-h-screen bg-purple-50/40 dark:bg-violet-950">
         <Navbar />
         <p className="p-8 text-gray-500 dark:text-purple-300">Đang tải...</p>
       </div>
@@ -38,7 +40,7 @@ export default function PrintReport() {
   }
 
   return (
- <div className="min-h-screen bg-purple-50/40 dark:bg-violet-950 print:min-h-0 print:bg-white">
+    <div className="min-h-screen bg-purple-50/40 dark:bg-violet-950 print:min-h-0 print:bg-white">
       <Navbar />
       <div className="no-print mx-auto flex max-w-4xl items-center justify-between px-4 py-4">
         <Link to={`/wedding/${id}`} className="flex items-center gap-1.5 text-sm text-purple-600 hover:underline dark:text-purple-300">
@@ -69,6 +71,26 @@ export default function PrintReport() {
         <div className="my-8" />
         <SideSection title="NHÀ GÁI" guests={brideGuests} />
 
+        <div className="mt-8 rounded-lg border-2 border-purple-600 bg-purple-50 p-4">
+          <h2 className="mb-2 font-display text-base font-bold text-purple-800">
+            TỔNG HỢP QUÀ CƯỚI CẢ HAI BÊN
+          </h2>
+          <p className="mb-2 text-sm">
+            Tổng số khách: <b>{guests.length}</b> (Nhà Trai: {groomGuests.length} · Nhà Gái: {brideGuests.length})
+          </p>
+          {combinedSummary.length === 0 ? (
+            <p className="text-sm text-gray-400">Chưa có dữ liệu</p>
+          ) : (
+            <ul className="list-disc pl-5 text-sm">
+              {combinedSummary.map((s) => (
+                <li key={s.key}>
+                  {s.key}: <b>{s.total}</b>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
         <div className="mt-10 grid grid-cols-2 gap-10 pt-6 text-center text-sm">
           <div>
             <p className="mb-16">Người lập báo cáo</p>
@@ -85,7 +107,7 @@ export default function PrintReport() {
 }
 
 function SideSection({ title, guests }) {
-  const summary = useMemo(() => summarize(guests), [guests])
+  const summary = useMemo(() => summarizeGifts(guests), [guests])
   return (
     <div>
       <h2 className="mb-3 rounded bg-purple-100 px-3 py-1.5 font-display text-base font-bold text-purple-800">
@@ -136,15 +158,3 @@ function SideSection({ title, guests }) {
   )
 }
 
-function summarize(guests) {
-  const map = {}
-  guests.forEach((g) => {
-    const type = g.giftType === 'Khác' ? g.giftTypeCustom : g.giftType
-    const unit = g.unit === 'Khác' ? g.unitCustom : g.unit
-    const key = `${type} (${unit || 'không rõ đơn vị'})`
-    const qty = parseFloat(g.quantity)
-    if (!map[key]) map[key] = 0
-    if (!isNaN(qty)) map[key] += qty
-  })
-  return Object.entries(map).map(([key, total]) => ({ key, total }))
-}
