@@ -7,13 +7,13 @@ import { getFirestore } from 'firebase/firestore'
 // Xem hướng dẫn lấy thông tin này trong file README.md (Bước 2)
 // ============================================================
 const firebaseConfig = {
-  apiKey: 'YOUR_API_KEY',
-  authDomain: 'YOUR_PROJECT_ID.firebaseapp.com',
-  projectId: 'YOUR_PROJECT_ID',
-  storageBucket: 'YOUR_PROJECT_ID.appspot.com',
-  messagingSenderId: 'YOUR_SENDER_ID',
-  appId: 'YOUR_APP_ID',
-}
+  apiKey: "AIzaSyA9iLMF9-dMarehP39U7zwHE8Shau6oQag",
+  authDomain: "wedding-4dc41.firebaseapp.com",
+  projectId: "wedding-4dc41",
+  storageBucket: "wedding-4dc41.firebasestorage.app",
+  messagingSenderId: "470772097587",
+  appId: "1:470772097587:web:3a6edf5c588dceaec63946"
+};
 
 const app = initializeApp(firebaseConfig)
 
