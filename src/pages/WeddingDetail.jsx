@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { collection, doc, onSnapshot } from 'firebase/firestore'
-import { ArrowLeft, FileText, Plus, Users } from 'lucide-react'
+import { ArrowLeft, BarChart3, FileText, Plus, Users } from 'lucide-react'
 import { db } from '../firebase'
 import { useAuth } from '../contexts/AuthContext'
 import Navbar from '../components/Navbar'
@@ -95,6 +95,12 @@ export default function WeddingDetail() {
                 <Users size={16} /> Thành viên
               </button>
             )}
+            <Link
+              to={`/wedding/${id}/report`}
+              className="flex items-center gap-1.5 rounded-lg border border-purple-200 px-3 py-2 text-sm font-medium text-purple-700 transition hover:bg-purple-50 dark:border-purple-800 dark:text-purple-200 dark:hover:bg-violet-900"
+            >
+              <BarChart3 size={16} /> Báo cáo
+            </Link>
             <Link
               to={`/wedding/${id}/print`}
               className="flex items-center gap-1.5 rounded-lg border border-purple-200 px-3 py-2 text-sm font-medium text-purple-700 transition hover:bg-purple-50 dark:border-purple-800 dark:text-purple-200 dark:hover:bg-violet-900"
