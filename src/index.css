@@ -46,14 +46,17 @@ body {
 
 /* Khu vực chỉ hiển thị khi in báo cáo A4 */
 @media print {
-  body * { visibility: hidden; }
-  #print-area, #print-area * { visibility: visible; }
-  #print-area {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-  }
   .no-print { display: none !important; }
+  html, body {
+    height: auto !important;
+    background: #fff !important;
+  }
+  #print-area {
+    position: static !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+    box-shadow: none !important;
+  }
   @page { size: A4; margin: 14mm 12mm; }
 }
