@@ -4,6 +4,7 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import WeddingDetail from './pages/WeddingDetail'
+import Report from './pages/Report'
 import PrintReport from './pages/PrintReport'
 import ProtectedRoute from './components/ProtectedRoute'
 
@@ -27,6 +28,14 @@ export default function App() {
         element={
           <ProtectedRoute>
             <WeddingDetail />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/wedding/:id/report"
+        element={
+          <ProtectedRoute>
+            <Report />
           </ProtectedRoute>
         }
       />
