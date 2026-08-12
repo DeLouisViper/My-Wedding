@@ -1,33 +1,34 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { collection, doc, onSnapshot } from 'firebase/firestore'
-import { ArrowLeft, FileText } from 'lucide-react'
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Legend,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts'
+import { ArrowLeft, FileText, X } from 'lucide-react'
+import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
 import { db } from '../firebase'
-import { useTheme } from '../contexts/ThemeContext'
+import { sideLabel } from '../constants'
 import { summarizeGifts } from '../utils'
 import Navbar from '../components/Navbar'
 
 const COLORS = ['#7c3aed', '#c026d3', '#4f46e5', '#db2777', '#8b5cf6', '#a21caf', '#0ea5e9']
 
+function relLabel(g) {
+  return g.relationship === 'Khác' ? g.relationshipCustom || 'Khác' : g.relationship
+}
+function giftLabel(g) {
+  return g.giftType === 'Khác' ? g.giftTypeCustom || 'Khác' : g.giftType
+}
+function unitLabel(g) {
+  return g.unit === 'Khác' ? g.unitCustom : g.unit
+}
+function statusLabel(g) {
+  return g.status === 'Khác' ? g.statusCustom : g.status
+}
+
 export default function Report() {
   const { id } = useParams()
-  const { dark } = useTheme()
   const [wedding, setWedding] = useState(null)
   const [guests, setGuests] = useState([])
   const [loading, setLoading] = useState(true)
+  const [selected, setSelected] = useState(null) // { side, relationship }
 
   useEffect(() => {
     const unsubW = onSnapshot(doc(db, 'weddings', id), (snap) => {
@@ -46,39 +47,18 @@ export default function Report() {
   const groomGuests = useMemo(() => guests.filter((g) => g.side === 'groom'), [guests])
   const brideGuests = useMemo(() => guests.filter((g) => g.side === 'bride'), [guests])
 
-  const sideChartData = useMemo(
-    () => [
-      { name: 'Nhà Trai', value: groomGuests.length },
-      { name: 'Nhà Gái', value: brideGuests.length },
-    ],
-    [groomGuests, brideGuests],
-  )
-
-  const relationshipChartData = useMemo(() => {
-    const map = {}
-    guests.forEach((g) => {
-      const rel = g.relationship === 'Khác' ? g.relationshipCustom || 'Khác' : g.relationship
-      map[rel] = (map[rel] || 0) + 1
-    })
-    return Object.entries(map).map(([name, value]) => ({ name, value }))
-  }, [guests])
-
-  const giftTypeBySideData = useMemo(() => {
-    const label = (g) => (g.giftType === 'Khác' ? g.giftTypeCustom || 'Khác' : g.giftType)
-    const types = Array.from(new Set(guests.map(label)))
-    return types.map((type) => ({
-      type,
-      'Nhà Trai': groomGuests.filter((g) => label(g) === type).length,
-      'Nhà Gái': brideGuests.filter((g) => label(g) === type).length,
-    }))
-  }, [guests, groomGuests, brideGuests])
+  const groomRelData = useMemo(() => buildRelData(groomGuests), [groomGuests])
+  const brideRelData = useMemo(() => buildRelData(brideGuests), [brideGuests])
 
   const groomSummary = useMemo(() => summarizeGifts(groomGuests), [groomGuests])
   const brideSummary = useMemo(() => summarizeGifts(brideGuests), [brideGuests])
   const totalSummary = useMemo(() => summarizeGifts(guests), [guests])
 
-  const axisColor = dark ? '#d8b4fe' : '#6b21a8'
-  const gridColor = dark ? '#4c1d95' : '#e9d5ff'
+  const selectedGuests = useMemo(() => {
+    if (!selected) return []
+    const pool = selected.side === 'groom' ? groomGuests : brideGuests
+    return pool.filter((g) => relLabel(g) === selected.relationship)
+  }, [selected, groomGuests, brideGuests])
 
   if (loading || !wedding) {
     return (
@@ -119,15 +99,28 @@ export default function Report() {
           <StatCard label="Nhà Gái" value={brideGuests.length} />
         </div>
 
+        <p className="mb-2 text-sm text-gray-500 dark:text-purple-300">
+          💡 Bấm vào một phần biểu đồ bên dưới để xem danh sách khách theo mối quan hệ đó.
+        </p>
         <div className="mb-4 grid gap-4 lg:grid-cols-2">
-          <ChartCard title="Tỷ lệ khách Nhà Trai / Nhà Gái">
-            {guests.length === 0 ? (
+          <ChartCard title="Nhà Trai — Phân loại theo mối quan hệ">
+            {groomRelData.length === 0 ? (
               <EmptyChart />
             ) : (
               <ResponsiveContainer width="100%" height={260}>
                 <PieChart>
-                  <Pie data={sideChartData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label>
-                    {sideChartData.map((entry, i) => (
+                  <Pie
+                    data={groomRelData}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={90}
+                    label
+                    cursor="pointer"
+                    onClick={(entry) => setSelected({ side: 'groom', relationship: entry.name })}
+                  >
+                    {groomRelData.map((entry, i) => (
                       <Cell key={entry.name} fill={COLORS[i % COLORS.length]} />
                     ))}
                   </Pie>
@@ -138,22 +131,24 @@ export default function Report() {
             )}
           </ChartCard>
 
-          <ChartCard title="Phân loại khách theo mối quan hệ">
-            {guests.length === 0 ? (
+          <ChartCard title="Nhà Gái — Phân loại theo mối quan hệ">
+            {brideRelData.length === 0 ? (
               <EmptyChart />
             ) : (
               <ResponsiveContainer width="100%" height={260}>
                 <PieChart>
                   <Pie
-                    data={relationshipChartData}
+                    data={brideRelData}
                     dataKey="value"
                     nameKey="name"
                     cx="50%"
                     cy="50%"
                     outerRadius={90}
                     label
+                    cursor="pointer"
+                    onClick={(entry) => setSelected({ side: 'bride', relationship: entry.name })}
                   >
-                    {relationshipChartData.map((entry, i) => (
+                    {brideRelData.map((entry, i) => (
                       <Cell key={entry.name} fill={COLORS[i % COLORS.length]} />
                     ))}
                   </Pie>
@@ -165,23 +160,53 @@ export default function Report() {
           </ChartCard>
         </div>
 
-        <ChartCard title="So sánh loại quà giữa hai bên">
-          {guests.length === 0 ? (
-            <EmptyChart />
-          ) : (
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={giftTypeBySideData}>
-                <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
-                <XAxis dataKey="type" tick={{ fill: axisColor, fontSize: 12 }} />
-                <YAxis allowDecimals={false} tick={{ fill: axisColor, fontSize: 12 }} />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="Nhà Trai" fill="#7c3aed" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="Nhà Gái" fill="#c026d3" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </ChartCard>
+        {selected && (
+          <div className="mb-6 rounded-xl border-2 border-purple-400 bg-white p-4 shadow-sm dark:border-purple-700 dark:bg-violet-900/40">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <h3 className="font-display text-sm font-bold text-gray-800 dark:text-white">
+                {sideLabel(selected.side)} — Mối quan hệ: {selected.relationship} ({selectedGuests.length} khách)
+              </h3>
+              <div className="flex items-center gap-2">
+                <Link
+                  to={`/wedding/${id}/print-list?side=${selected.side}&relationship=${encodeURIComponent(selected.relationship)}`}
+                  className="flex items-center gap-1.5 rounded-lg gradient-bg px-3 py-1.5 text-xs font-medium text-white shadow hover:opacity-90"
+                >
+                  <FileText size={14} /> Xuất PDF danh sách này
+                </Link>
+                <button
+                  onClick={() => setSelected(null)}
+                  className="rounded-lg p-1.5 text-gray-400 hover:bg-purple-50 dark:hover:bg-violet-800"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[560px] text-sm">
+                <thead>
+                  <tr className="bg-purple-100/70 text-left text-gray-600 dark:bg-violet-900/60 dark:text-purple-200">
+                    <th className="px-2 py-2 font-semibold">Tên khách</th>
+                    <th className="px-2 py-2 font-semibold">Loại quà</th>
+                    <th className="px-2 py-2 font-semibold">Số lượng</th>
+                    <th className="px-2 py-2 font-semibold">Trạng thái</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {selectedGuests.map((g) => (
+                    <tr key={g.id} className="border-t border-purple-100 dark:border-purple-900/50">
+                      <td className="px-2 py-2 font-medium text-gray-800 dark:text-white">{g.name}</td>
+                      <td className="px-2 py-2 text-gray-600 dark:text-purple-200">{giftLabel(g)}</td>
+                      <td className="px-2 py-2 text-gray-600 dark:text-purple-200">
+                        {g.quantity} {unitLabel(g)}
+                      </td>
+                      <td className="px-2 py-2 text-gray-600 dark:text-purple-200">{statusLabel(g)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
         <div className="mt-6 grid gap-4 md:grid-cols-3">
           <SummaryCard title="Nhà Trai" items={groomSummary} />
@@ -191,6 +216,15 @@ export default function Report() {
       </main>
     </div>
   )
+}
+
+function buildRelData(guests) {
+  const map = {}
+  guests.forEach((g) => {
+    const rel = relLabel(g)
+    map[rel] = (map[rel] || 0) + 1
+  })
+  return Object.entries(map).map(([name, value]) => ({ name, value }))
 }
 
 function StatCard({ label, value }) {
