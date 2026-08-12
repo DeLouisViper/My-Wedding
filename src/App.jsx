@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard'
 import WeddingDetail from './pages/WeddingDetail'
 import Report from './pages/Report'
 import PrintReport from './pages/PrintReport'
+import PrintGuestList from './pages/PrintGuestList'
 import ProtectedRoute from './components/ProtectedRoute'
 
 export default function App() {
@@ -44,6 +45,14 @@ export default function App() {
         element={
           <ProtectedRoute>
             <PrintReport />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/wedding/:id/print-list"
+        element={
+          <ProtectedRoute>
+            <PrintGuestList />
           </ProtectedRoute>
         }
       />
