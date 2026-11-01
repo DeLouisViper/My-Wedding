@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { collection, doc, getDoc, getDocs } from 'firebase/firestore'
 import { ArrowLeft, Printer } from 'lucide-react'
 import { db } from '../firebase'
-import { summarizeGifts } from '../utils'
+import { cashTotalVND, formatTrieu, formatVND, summarizeGifts } from '../utils'
 import Navbar from '../components/Navbar'
 
 export default function PrintReport() {
@@ -89,6 +89,7 @@ export default function PrintReport() {
               ))}
             </ul>
           )}
+          <CashTotalLine summary={combinedSummary} />
         </div>
 
         <div className="mt-10 grid grid-cols-2 gap-10 pt-6 text-center text-sm">
@@ -122,12 +123,13 @@ function SideSection({ title, guests }) {
             <th className="py-1.5 pr-2">Loại quà</th>
             <th className="py-1.5 pr-2">Số lượng</th>
             <th className="py-1.5 pr-2">Trạng thái</th>
+            <th className="py-1.5 pr-2">Ghi chú</th>
           </tr>
         </thead>
         <tbody>
           {guests.length === 0 ? (
             <tr>
-              <td colSpan={6} className="py-4 text-center text-gray-400">Chưa có dữ liệu</td>
+              <td colSpan={7} className="py-4 text-center text-gray-400">Chưa có dữ liệu</td>
             </tr>
           ) : (
             guests.map((g, i) => (
@@ -138,6 +140,7 @@ function SideSection({ title, guests }) {
                 <td className="py-1.5 pr-2">{g.giftType === 'Khác' ? g.giftTypeCustom : g.giftType}</td>
                 <td className="py-1.5 pr-2">{g.quantity} {g.unit === 'Khác' ? g.unitCustom : g.unit}</td>
                 <td className="py-1.5 pr-2">{g.status === 'Khác' ? g.statusCustom : g.status}</td>
+                <td className="py-1.5 pr-2 max-w-[140px] break-words text-gray-600">{g.note || ''}</td>
               </tr>
             ))
           )}
@@ -152,9 +155,19 @@ function SideSection({ title, guests }) {
               <li key={s.key}>{s.key}: {s.total}</li>
             ))}
           </ul>
+          <CashTotalLine summary={summary} />
         </div>
       )}
     </div>
   )
 }
 
+function CashTotalLine({ summary }) {
+  const totalVND = cashTotalVND(summary)
+  if (totalVND === null) return null
+  return (
+    <p className="mt-1 font-semibold text-purple-700">
+      Tổng cộng tiền mặt: {formatTrieu(totalVND)} (chi tiết: {formatVND(totalVND)} đồng)
+    </p>
+  )
+}
